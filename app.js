@@ -7,7 +7,8 @@ const diceInput = document.querySelector('#dice-command');
 const diceResult = document.querySelector('#dice-result');
 
 let entries = [];
-let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '', personality: '' })) };
+let roomState = { sceneText: '', sceneImageId: '', players: Array.from({ length: 4 }, () => ({ name: '', portraitImageId: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '', personality: '' })) };
+const imageUrls = new Map();
 let isLoading = false;
 let isSavingState = false;
 let isRolling = false;
@@ -58,12 +59,14 @@ function render() {
 
 function renderState() {
   document.querySelector('#scene-text').value = roomState.sceneText || '';
+  showImage(document.querySelector('#scene-image'), roomState.sceneImageId);
   const container = document.querySelector('#players');
   container.replaceChildren();
   roomState.players.forEach((player, index) => {
     const node = document.querySelector('#player-template').content.cloneNode(true);
     const card = node.querySelector('.player-card');
     card.dataset.index = index;
+    showImage(card.querySelector('.portrait'), player.portraitImageId);
     card.querySelector('.character-name').value = player.name || '';
     card.querySelector('.hp').value = player.hp ?? 10;
     card.querySelector('.max-hp').value = player.maxHp ?? 10;
@@ -94,14 +97,38 @@ function renderPlayerSelector() {
 function readStateFromScreen() {
   return {
     sceneText: document.querySelector('#scene-text').value.trim(),
-    sceneImage: roomState.sceneImage || '',
+    sceneImageId: roomState.sceneImageId || '',
     players: [...document.querySelectorAll('.player-card')].map((card) => ({
-      name: card.querySelector('.character-name').value.trim(), hp: Number(card.querySelector('.hp').value) || 0,
+      name: card.querySelector('.character-name').value.trim(), portraitImageId: roomState.players[Number(card.dataset.index)]?.portraitImageId || '', hp: Number(card.querySelector('.hp').value) || 0,
       maxHp: Number(card.querySelector('.max-hp').value) || 1, mp: Number(card.querySelector('.mp').value) || 0,
       sp: Number(card.querySelector('.sp').value) || 0, equipment: card.querySelector('.equipment').value.trim(),
       items: card.querySelector('.items').value.trim(), condition: card.querySelector('.condition').value.trim(), personality: card.querySelector('.personality').value.trim(),
     })),
   };
+}
+
+async function getImageUrl(imageId) {
+  if (!imageId) return '';
+  if (imageUrls.has(imageId)) return imageUrls.get(imageId);
+  const cached = sessionStorage.getItem(`trpg-image-${imageId}`);
+  if (cached) { imageUrls.set(imageId, cached); return cached; }
+  const data = await api('image', { id: imageId });
+  const url = `data:${data.mimeType};base64,${data.base64}`;
+  imageUrls.set(imageId, url);
+  try { sessionStorage.setItem(`trpg-image-${imageId}`, url); } catch (error) {}
+  return url;
+}
+
+function showImage(container, imageId) {
+  if (!container) return;
+  const img = container.querySelector('img');
+  if (!imageId) { container.hidden = true; img.removeAttribute('src'); return; }
+  container.hidden = false;
+  if (img.dataset.imageId === imageId && img.src) return;
+  img.dataset.imageId = imageId;
+  getImageUrl(imageId).then((url) => {
+    if (img.dataset.imageId === imageId) img.src = url;
+  }).catch(() => { if (img.dataset.imageId === imageId) container.hidden = true; });
 }
 
 function isEditingState() {

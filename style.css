@@ -36,9 +36,13 @@ h2 { font-family: Georgia, serif; font-size: 1.5rem; margin: 0; }
 .dice-result { display: block; min-height: 80px; border-radius: 10px; padding: 18px; background: #171720; color: #f5cf83; font-family: ui-monospace, Consolas, monospace; font-size: 1.1rem; line-height: 1.7; }
 .scene-card { margin-bottom: 20px; }
 .scene-card label { display: block; margin: 14px 0 6px; }
-.scene-image { height: 170px; display: grid; place-items: center; margin-bottom: 14px; border-radius: 10px; color: #e7bc70; letter-spacing: .2em; background: linear-gradient(135deg, #3a3043, #1b1a25); background-size: cover; background-position: center; }
+.scene-image { width: 100%; max-height: 480px; margin-bottom: 14px; overflow: hidden; border-radius: 10px; background: #171720; text-align: center; }
+.scene-image img { display: block; width: 100%; max-height: 480px; object-fit: contain; }
+.scene-image[hidden], .portrait[hidden] { display: none; }
 .players { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .player-card { border: 1px solid #393747; border-radius: 10px; padding: 12px; background: #171720; }
+.portrait { height: 220px; margin: -4px -4px 12px; overflow: hidden; border-radius: 8px; background: #101018; }
+.portrait img { width: 100%; height: 100%; object-fit: contain; }
 .player-card > input, .player-card label input { width: 100%; margin-bottom: 10px; }
 .player-card label { display: block; color: #c9c2d2; font-size: .8rem; }
 .hp-value { float: right; color: #e7bc70; font-weight: 800; }
