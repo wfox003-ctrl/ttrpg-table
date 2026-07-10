@@ -65,6 +65,19 @@ function renderState() {
     card.querySelector('.hp-value').textContent = `${player.hp ?? 10} / ${player.maxHp ?? 10}`;
     container.append(node);
   });
+  renderPlayerSelector();
+}
+
+function renderPlayerSelector() {
+  const selected = nameInput.value;
+  nameInput.replaceChildren();
+  const gm = new Option('GM', 'GM');
+  nameInput.add(gm);
+  roomState.players.forEach((player, index) => {
+    if (player.name) nameInput.add(new Option(player.name, player.name));
+    else nameInput.add(new Option(`プレイヤー ${index + 1}（未設定）`, `プレイヤー ${index + 1}`));
+  });
+  nameInput.value = [...nameInput.options].some((option) => option.value === selected) ? selected : 'GM';
 }
 
 function readStateFromScreen() {

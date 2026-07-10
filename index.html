@@ -17,7 +17,9 @@
 
       <section class="table-card" aria-label="プレイヤー設定">
         <label for="player-name">名前</label>
-        <input id="player-name" maxlength="24" placeholder="例：コウスケ" value="プレイヤー" />
+        <select id="player-name" aria-label="発言するプレイヤー">
+          <option value="GM">GM</option>
+        </select>
         <p>ログは共有用のGoogleスプレッドシートに保存され、5秒ごとに更新されます。</p>
       </section>
 

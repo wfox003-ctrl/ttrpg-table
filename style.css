@@ -13,7 +13,7 @@ h1 { margin: 0; font-family: Georgia, serif; font-size: clamp(2.2rem, 6vw, 4.5re
 .app-shell > .table-card { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 14px 22px; }
 .app-shell > .table-card p { color: #aaa5b3; font-size: .85rem; margin: 0; }
 label { color: #c9c2d2; font-size: .88rem; font-weight: 700; }
-input { border: 1px solid #5a5565; border-radius: 9px; background: #171720; color: #fff; padding: .8rem .9rem; outline: none; }
+input, select { border: 1px solid #5a5565; border-radius: 9px; background: #171720; color: #fff; padding: .8rem .9rem; outline: none; }
 textarea { width: 100%; min-height: 76px; resize: vertical; border: 1px solid #5a5565; border-radius: 9px; background: #171720; color: #fff; padding: .8rem .9rem; outline: none; }
 input:focus { border-color: #d9ad61; box-shadow: 0 0 0 3px #d9ad6133; }
 #player-name { width: min(260px, 100%); }
