@@ -58,10 +58,6 @@ function render() {
 
 function renderState() {
   document.querySelector('#scene-text').value = roomState.sceneText || '';
-  document.querySelector('#scene-image-url').value = roomState.sceneImage || '';
-  const image = document.querySelector('#scene-image');
-  image.style.backgroundImage = roomState.sceneImage ? `url("${roomState.sceneImage}")` : '';
-  image.textContent = roomState.sceneImage ? '' : 'SCENE';
   const container = document.querySelector('#players');
   container.replaceChildren();
   roomState.players.forEach((player, index) => {
@@ -98,7 +94,7 @@ function renderPlayerSelector() {
 function readStateFromScreen() {
   return {
     sceneText: document.querySelector('#scene-text').value.trim(),
-    sceneImage: document.querySelector('#scene-image-url').value.trim(),
+    sceneImage: roomState.sceneImage || '',
     players: [...document.querySelectorAll('.player-card')].map((card) => ({
       name: card.querySelector('.character-name').value.trim(), hp: Number(card.querySelector('.hp').value) || 0,
       maxHp: Number(card.querySelector('.max-hp').value) || 1, mp: Number(card.querySelector('.mp').value) || 0,
@@ -230,7 +226,6 @@ document.querySelector('#players').addEventListener('input', (event) => {
   if (card) card.querySelector('.hp-value').textContent = `${card.querySelector('.hp').value} / ${card.querySelector('.max-hp').value}`;
 });
 document.querySelector('#scene-text').addEventListener('input', () => { stateDirty = true; });
-document.querySelector('#scene-image-url').addEventListener('input', () => { stateDirty = true; });
 
 renderState();
 loadEntries();
