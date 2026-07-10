@@ -104,6 +104,11 @@ function readStateFromScreen() {
   };
 }
 
+function isEditingState() {
+  const active = document.activeElement;
+  return active === document.querySelector('#scene-text') || active === document.querySelector('#scene-image-url') || Boolean(active?.closest?.('.player-card'));
+}
+
 async function saveState() {
   if (isSavingState) return;
   isSavingState = true;
@@ -126,8 +131,10 @@ async function loadEntries() {
   try {
     const data = await api('read');
     entries = data.logs;
-    if (data.state && Array.isArray(data.state.players)) { roomState = data.state; }
-    renderState();
+    if (data.state && Array.isArray(data.state.players)) {
+      roomState = data.state;
+      if (!isEditingState()) renderState();
+    }
     setSyncStatus('同期済み・5秒ごとに更新');
     render();
   } catch (error) {
