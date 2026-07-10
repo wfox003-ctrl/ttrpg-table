@@ -16,14 +16,6 @@
         <div class="sync-indicator" aria-live="polite"><span id="hourglass" class="hourglass" aria-hidden="true"></span><span id="sync-status">5秒ごとに同期</span></div>
       </header>
 
-      <section class="table-card" aria-label="プレイヤー設定">
-        <label for="player-name">名前</label>
-        <select id="player-name" aria-label="発言するプレイヤー">
-          <option value="GM">GM</option>
-        </select>
-        <p>ログは共有用のGoogleスプレッドシートに保存され、5秒ごとに更新されます。</p>
-      </section>
-
       <section class="table-card scene-card" aria-label="現在の場面">
         <div class="section-heading"><h2>現在の場面</h2><button id="save-scene" class="text-button" type="button">場面を更新</button></div>
         <div id="scene-image" class="scene-image">SCENE</div>
@@ -62,6 +54,8 @@
           </div>
           <div id="log" class="log" aria-live="polite"></div>
           <form id="chat-form" class="chat-form">
+            <label class="sr-only" for="player-name">発言者</label>
+            <select id="player-name" aria-label="発言するプレイヤー"><option value="GM">GM</option></select>
             <label class="sr-only" for="chat-message">発言</label>
             <input id="chat-message" maxlength="280" autocomplete="off" placeholder="発言を入力…" />
             <button type="submit" class="primary">送信</button>
