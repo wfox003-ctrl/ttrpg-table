@@ -1,17 +1,30 @@
-const STORAGE_KEY = 'ttrpg-table-log-v1';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzwFBACQdvp_jgYs1ZDlrmf3NkOlTZrXx35zK7fbGPPWi0TOAFYLFWkq581DMg-nV1W/exec';
+const ROOM_KEY = 'kousuke-table-2026';
 const logElement = document.querySelector('#log');
 const template = document.querySelector('#log-entry-template');
 const nameInput = document.querySelector('#player-name');
 const diceInput = document.querySelector('#dice-command');
 const diceResult = document.querySelector('#dice-result');
 
-let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let entries = [];
 
 function now() {
   return new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit' }).format(new Date());
 }
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+function api(action, values = {}) {
+  return new Promise((resolve, reject) => {
+    const callback = `ttrpgCallback${Date.now()}${Math.floor(Math.random() * 10000)}`;
+    const params = new URLSearchParams({ action, key: ROOM_KEY, callback, ...values });
+    const script = document.createElement('script');
+    const cleanup = () => { delete window[callback]; script.remove(); };
+    const timer = setTimeout(() => { cleanup(); reject(new Error('共有ログへの接続がタイムアウトしました。')); }, 10000);
+    window[callback] = (data) => { clearTimeout(timer); cleanup(); data.ok ? resolve(data) : reject(new Error(data.error)); };
+    script.onerror = () => { clearTimeout(timer); cleanup(); reject(new Error('共有ログに接続できません。')); };
+    script.src = `${API_URL}?${params}`;
+    document.head.append(script);
+  });
+}
 
 function render() {
   logElement.replaceChildren();
@@ -32,11 +45,23 @@ function render() {
   logElement.scrollTop = logElement.scrollHeight;
 }
 
-function addEntry(name, message) {
-  entries.push({ name, message, time: now() });
-  entries = entries.slice(-100);
-  save();
-  render();
+async function addEntry(name, message) {
+  await api('write', { name, message });
+  await loadEntries();
+}
+
+async function loadEntries() {
+  try {
+    const data = await api('read');
+    entries = data.logs;
+    render();
+  } catch (error) {
+    logElement.replaceChildren();
+    const notice = document.createElement('p');
+    notice.textContent = error.message;
+    notice.style.color = '#e7bc70';
+    logElement.append(notice);
+  }
 }
 
 function roll(command) {
@@ -52,7 +77,7 @@ function roll(command) {
   return { cleaned, values, modifier, total };
 }
 
-document.querySelector('#dice-form').addEventListener('submit', (event) => {
+document.querySelector('#dice-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   try {
     const result = roll(diceInput.value);
@@ -60,7 +85,7 @@ document.querySelector('#dice-form').addEventListener('submit', (event) => {
     const detail = `[${result.values.join(', ')}]${modifierText}`;
     const message = `${result.cleaned.toUpperCase()} → ${result.total}（${detail}）`;
     diceResult.textContent = message;
-    addEntry(nameInput.value.trim() || 'プレイヤー', `🎲 ${message}`);
+    await addEntry(nameInput.value.trim() || 'プレイヤー', `[DICE] ${message}`);
   } catch (error) { diceResult.textContent = error.message; }
 });
 
@@ -69,22 +94,21 @@ document.querySelectorAll('[data-dice]').forEach((button) => button.addEventList
   document.querySelector('#dice-form').requestSubmit();
 }));
 
-document.querySelector('#chat-form').addEventListener('submit', (event) => {
+document.querySelector('#chat-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const field = document.querySelector('#chat-message');
   const message = field.value.trim();
   if (!message) return;
-  addEntry(nameInput.value.trim() || 'プレイヤー', message);
-  field.value = '';
-  field.focus();
+  try {
+    await addEntry(nameInput.value.trim() || 'プレイヤー', message);
+    field.value = '';
+    field.focus();
+  } catch (error) { window.alert(error.message); }
 });
 
 document.querySelector('#clear-log').addEventListener('click', () => {
-  if (window.confirm('このブラウザのログをすべて消しますか？')) {
-    entries = [];
-    save();
-    render();
-  }
+  window.alert('共有ログは消去できない設定です。必要ならGoogleスプレッドシートから管理者が削除します。');
 });
 
-render();
+loadEntries();
+setInterval(loadEntries, 5000);
