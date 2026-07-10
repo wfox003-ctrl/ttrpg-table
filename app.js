@@ -10,6 +10,8 @@ let entries = [];
 let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '' })) };
 let isLoading = false;
 let isSavingState = false;
+let isRolling = false;
+let isSendingChat = false;
 
 function setSyncStatus(message, syncing = false) {
   document.querySelector('#sync-status').textContent = message;
@@ -165,6 +167,10 @@ function roll(command) {
 
 document.querySelector('#dice-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (isRolling) return;
+  isRolling = true;
+  const diceButtons = document.querySelectorAll('#dice-form button, .quick-dice button');
+  diceButtons.forEach((button) => { button.disabled = true; });
   try {
     const result = roll(diceInput.value);
     const modifierText = result.modifier ? ` ${result.modifier > 0 ? '+' : '-'} ${Math.abs(result.modifier)}` : '';
@@ -173,6 +179,10 @@ document.querySelector('#dice-form').addEventListener('submit', async (event) =>
     diceResult.textContent = message;
     await addEntry(nameInput.value.trim() || 'プレイヤー', `[DICE] ${message}`);
   } catch (error) { diceResult.textContent = error.message; }
+  finally {
+    isRolling = false;
+    diceButtons.forEach((button) => { button.disabled = false; });
+  }
 });
 
 document.querySelectorAll('[data-dice]').forEach((button) => button.addEventListener('click', () => {
@@ -182,14 +192,19 @@ document.querySelectorAll('[data-dice]').forEach((button) => button.addEventList
 
 document.querySelector('#chat-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (isSendingChat) return;
   const field = document.querySelector('#chat-message');
   const message = field.value.trim();
   if (!message) return;
+  isSendingChat = true;
+  const sendButton = document.querySelector('#chat-form button');
+  sendButton.disabled = true;
   try {
     await addEntry(nameInput.value.trim() || 'プレイヤー', message);
     field.value = '';
     field.focus();
   } catch (error) { window.alert(error.message); }
+  finally { isSendingChat = false; sendButton.disabled = false; }
 });
 
 document.querySelector('#clear-log').addEventListener('click', () => {
