@@ -7,7 +7,7 @@ const diceInput = document.querySelector('#dice-command');
 const diceResult = document.querySelector('#dice-result');
 
 let entries = [];
-let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, note: '' })) };
+let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '' })) };
 
 function now() {
   return new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit' }).format(new Date());
@@ -61,7 +61,11 @@ function renderState() {
     card.querySelector('.character-name').value = player.name || '';
     card.querySelector('.hp').value = player.hp ?? 10;
     card.querySelector('.max-hp').value = player.maxHp ?? 10;
-    card.querySelector('.character-note').value = player.note || '';
+    card.querySelector('.mp').value = player.mp ?? 0;
+    card.querySelector('.sp').value = player.sp ?? 0;
+    card.querySelector('.equipment').value = player.equipment || '';
+    card.querySelector('.items').value = player.items || '';
+    card.querySelector('.condition').value = player.condition || '';
     card.querySelector('.hp-value').textContent = `${player.hp ?? 10} / ${player.maxHp ?? 10}`;
     container.append(node);
   });
@@ -86,7 +90,9 @@ function readStateFromScreen() {
     sceneImage: document.querySelector('#scene-image-url').value.trim(),
     players: [...document.querySelectorAll('.player-card')].map((card) => ({
       name: card.querySelector('.character-name').value.trim(), hp: Number(card.querySelector('.hp').value) || 0,
-      maxHp: Number(card.querySelector('.max-hp').value) || 1, note: card.querySelector('.character-note').value.trim(),
+      maxHp: Number(card.querySelector('.max-hp').value) || 1, mp: Number(card.querySelector('.mp').value) || 0,
+      sp: Number(card.querySelector('.sp').value) || 0, equipment: card.querySelector('.equipment').value.trim(),
+      items: card.querySelector('.items').value.trim(), condition: card.querySelector('.condition').value.trim(),
     })),
   };
 }
@@ -106,7 +112,8 @@ async function loadEntries() {
   try {
     const data = await api('read');
     entries = data.logs;
-    if (data.state) { roomState = data.state; renderState(); }
+    if (data.state && Array.isArray(data.state.players)) { roomState = data.state; }
+    renderState();
     render();
   } catch (error) {
     logElement.replaceChildren();

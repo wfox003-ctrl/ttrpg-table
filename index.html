@@ -84,7 +84,10 @@
         <input class="character-name" maxlength="24" placeholder="キャラクター名" />
         <label>HP <output class="hp-value"></output></label>
         <div class="hp-row"><input class="hp" type="number" min="0" value="10" /><span>/</span><input class="max-hp" type="number" min="1" value="10" /></div>
-        <label>メモ<input class="character-note" maxlength="80" placeholder="状態・技能など" /></label>
+        <div class="resource-row"><label>MP<input class="mp" type="number" min="0" value="0" /></label><label>SP<input class="sp" type="number" min="0" value="0" /></label></div>
+        <label>装備<input class="equipment" maxlength="80" placeholder="例：ロングソード" /></label>
+        <label>持ち物<input class="items" maxlength="120" placeholder="例：回復薬、松明" /></label>
+        <label>状態<input class="condition" maxlength="80" placeholder="例：正常、毒、負傷" /></label>
       </article>
     </template>
     <script src="app.js"></script>
