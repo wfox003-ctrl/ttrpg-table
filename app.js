@@ -8,6 +8,13 @@ const diceResult = document.querySelector('#dice-result');
 
 let entries = [];
 let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '' })) };
+let isLoading = false;
+let isSavingState = false;
+
+function setSyncStatus(message, syncing = false) {
+  document.querySelector('#sync-status').textContent = message;
+  document.querySelector('#hourglass').classList.toggle('syncing', syncing);
+}
 
 function now() {
   return new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit' }).format(new Date());
@@ -98,9 +105,13 @@ function readStateFromScreen() {
 }
 
 async function saveState() {
+  if (isSavingState) return;
+  isSavingState = true;
+  document.querySelectorAll('#save-scene, #save-status').forEach((button) => { button.disabled = true; });
+  setSyncStatus('保存中...', true);
   roomState = readStateFromScreen();
-  await api('state', { state: JSON.stringify(roomState) });
-  renderState();
+  try { await api('state', { state: JSON.stringify(roomState) }); renderState(); setSyncStatus('保存しました'); }
+  finally { isSavingState = false; document.querySelectorAll('#save-scene, #save-status').forEach((button) => { button.disabled = false; }); }
 }
 
 async function addEntry(name, message) {
@@ -109,11 +120,15 @@ async function addEntry(name, message) {
 }
 
 async function loadEntries() {
+  if (isLoading) return;
+  isLoading = true;
+  setSyncStatus('同期中...', true);
   try {
     const data = await api('read');
     entries = data.logs;
     if (data.state && Array.isArray(data.state.players)) { roomState = data.state; }
     renderState();
+    setSyncStatus('同期済み・5秒ごとに更新');
     render();
   } catch (error) {
     logElement.replaceChildren();
@@ -121,6 +136,10 @@ async function loadEntries() {
     notice.textContent = error.message;
     notice.style.color = '#e7bc70';
     logElement.append(notice);
+    setSyncStatus('同期できません');
+  } finally {
+    isLoading = false;
+    document.querySelector('#hourglass').classList.remove('syncing');
   }
 }
 
