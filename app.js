@@ -7,6 +7,7 @@ const diceInput = document.querySelector('#dice-command');
 const diceResult = document.querySelector('#dice-result');
 
 let entries = [];
+let roomState = { sceneText: '', sceneImage: '', players: Array.from({ length: 4 }, () => ({ name: '', hp: 10, maxHp: 10, note: '' })) };
 
 function now() {
   return new Intl.DateTimeFormat('ja-JP', { hour: '2-digit', minute: '2-digit' }).format(new Date());
@@ -45,6 +46,44 @@ function render() {
   logElement.scrollTop = logElement.scrollHeight;
 }
 
+function renderState() {
+  document.querySelector('#scene-text').value = roomState.sceneText || '';
+  document.querySelector('#scene-image-url').value = roomState.sceneImage || '';
+  const image = document.querySelector('#scene-image');
+  image.style.backgroundImage = roomState.sceneImage ? `url("${roomState.sceneImage}")` : '';
+  image.textContent = roomState.sceneImage ? '' : 'SCENE';
+  const container = document.querySelector('#players');
+  container.replaceChildren();
+  roomState.players.forEach((player, index) => {
+    const node = document.querySelector('#player-template').content.cloneNode(true);
+    const card = node.querySelector('.player-card');
+    card.dataset.index = index;
+    card.querySelector('.character-name').value = player.name || '';
+    card.querySelector('.hp').value = player.hp ?? 10;
+    card.querySelector('.max-hp').value = player.maxHp ?? 10;
+    card.querySelector('.character-note').value = player.note || '';
+    card.querySelector('.hp-value').textContent = `${player.hp ?? 10} / ${player.maxHp ?? 10}`;
+    container.append(node);
+  });
+}
+
+function readStateFromScreen() {
+  return {
+    sceneText: document.querySelector('#scene-text').value.trim(),
+    sceneImage: document.querySelector('#scene-image-url').value.trim(),
+    players: [...document.querySelectorAll('.player-card')].map((card) => ({
+      name: card.querySelector('.character-name').value.trim(), hp: Number(card.querySelector('.hp').value) || 0,
+      maxHp: Number(card.querySelector('.max-hp').value) || 1, note: card.querySelector('.character-note').value.trim(),
+    })),
+  };
+}
+
+async function saveState() {
+  roomState = readStateFromScreen();
+  await api('state', { state: JSON.stringify(roomState) });
+  renderState();
+}
+
 async function addEntry(name, message) {
   await api('write', { name, message });
   await loadEntries();
@@ -54,6 +93,7 @@ async function loadEntries() {
   try {
     const data = await api('read');
     entries = data.logs;
+    if (data.state) { roomState = data.state; renderState(); }
     render();
   } catch (error) {
     logElement.replaceChildren();
@@ -110,5 +150,13 @@ document.querySelector('#clear-log').addEventListener('click', () => {
   window.alert('共有ログは消去できない設定です。必要ならGoogleスプレッドシートから管理者が削除します。');
 });
 
+document.querySelector('#save-scene').addEventListener('click', () => saveState().catch((error) => window.alert(error.message)));
+document.querySelector('#save-status').addEventListener('click', () => saveState().catch((error) => window.alert(error.message)));
+document.querySelector('#players').addEventListener('input', (event) => {
+  const card = event.target.closest('.player-card');
+  if (card) card.querySelector('.hp-value').textContent = `${card.querySelector('.hp').value} / ${card.querySelector('.max-hp').value}`;
+});
+
+renderState();
 loadEntries();
 setInterval(loadEntries, 5000);

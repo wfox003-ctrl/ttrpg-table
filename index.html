@@ -21,6 +21,15 @@
         <p>ログは共有用のGoogleスプレッドシートに保存され、5秒ごとに更新されます。</p>
       </section>
 
+      <section class="table-card scene-card" aria-label="現在の場面">
+        <div class="section-heading"><h2>現在の場面</h2><button id="save-scene" class="text-button" type="button">場面を更新</button></div>
+        <div id="scene-image" class="scene-image">SCENE</div>
+        <label for="scene-image-url">場面の画像URL（任意）</label>
+        <input id="scene-image-url" placeholder="https://..." />
+        <label for="scene-text">状況</label>
+        <textarea id="scene-text" maxlength="500" placeholder="例：雨の降る古い洋館。地下から物音が聞こえる。"></textarea>
+      </section>
+
       <div class="table-grid">
         <section class="table-card dice-card" aria-label="ダイス">
           <div class="section-heading">
@@ -56,11 +65,24 @@
           </form>
         </section>
       </div>
+
+      <section class="table-card status-card" aria-label="プレイヤーステータス">
+        <div class="section-heading"><h2>プレイヤーステータス</h2><button id="save-status" class="text-button" type="button">ステータスを更新</button></div>
+        <div id="players" class="players"></div>
+      </section>
     </main>
     <template id="log-entry-template">
       <article class="log-entry">
         <div class="log-meta"><strong></strong><time></time></div>
         <p></p>
+      </article>
+    </template>
+    <template id="player-template">
+      <article class="player-card">
+        <input class="character-name" maxlength="24" placeholder="キャラクター名" />
+        <label>HP <output class="hp-value"></output></label>
+        <div class="hp-row"><input class="hp" type="number" min="0" value="10" /><span>/</span><input class="max-hp" type="number" min="1" value="10" /></div>
+        <label>メモ<input class="character-note" maxlength="80" placeholder="状態・技能など" /></label>
       </article>
     </template>
     <script src="app.js"></script>
