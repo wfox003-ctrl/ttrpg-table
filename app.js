@@ -12,6 +12,7 @@ let isLoading = false;
 let isSavingState = false;
 let isRolling = false;
 let isSendingChat = false;
+let stateDirty = false;
 
 function setSyncStatus(message, syncing = false) {
   document.querySelector('#sync-status').textContent = message;
@@ -111,13 +112,22 @@ function isEditingState() {
   return active === document.querySelector('#scene-text') || active === document.querySelector('#scene-image-url') || Boolean(active?.closest?.('.player-card'));
 }
 
+function hasUsableState(state) {
+  return Array.isArray(state?.players) && state.players.length === 4;
+}
+
 async function saveState() {
   if (isSavingState) return;
   isSavingState = true;
   document.querySelectorAll('#save-scene, #save-status').forEach((button) => { button.disabled = true; });
   setSyncStatus('保存中...', true);
   roomState = readStateFromScreen();
-  try { await api('state', { state: JSON.stringify(roomState) }); renderState(); setSyncStatus('保存しました'); }
+  try {
+    await api('state', { state: JSON.stringify(roomState) });
+    stateDirty = false;
+    renderState();
+    setSyncStatus('保存しました');
+  }
   finally { isSavingState = false; document.querySelectorAll('#save-scene, #save-status').forEach((button) => { button.disabled = false; }); }
 }
 
@@ -133,9 +143,9 @@ async function loadEntries() {
   try {
     const data = await api('read');
     entries = data.logs;
-    if (data.state && Array.isArray(data.state.players)) {
+    if (hasUsableState(data.state) && !stateDirty) {
       roomState = data.state;
-      if (!isEditingState()) renderState();
+      renderState();
     }
     setSyncStatus('同期済み・5秒ごとに更新');
     render();
@@ -214,9 +224,12 @@ document.querySelector('#clear-log').addEventListener('click', () => {
 document.querySelector('#save-scene').addEventListener('click', () => saveState().catch((error) => window.alert(error.message)));
 document.querySelector('#save-status').addEventListener('click', () => saveState().catch((error) => window.alert(error.message)));
 document.querySelector('#players').addEventListener('input', (event) => {
+  stateDirty = true;
   const card = event.target.closest('.player-card');
   if (card) card.querySelector('.hp-value').textContent = `${card.querySelector('.hp').value} / ${card.querySelector('.max-hp').value}`;
 });
+document.querySelector('#scene-text').addEventListener('input', () => { stateDirty = true; });
+document.querySelector('#scene-image-url').addEventListener('input', () => { stateDirty = true; });
 
 renderState();
 loadEntries();
