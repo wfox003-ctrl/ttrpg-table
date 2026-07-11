@@ -36,6 +36,13 @@ h2 { font-family: Georgia, serif; font-size: 1.5rem; margin: 0; }
 .dice-result { display: block; min-height: 80px; border-radius: 10px; padding: 18px; background: #171720; color: #f5cf83; font-family: ui-monospace, Consolas, monospace; font-size: 1.1rem; line-height: 1.7; }
 .scene-card { margin-bottom: 20px; }
 .scene-card label { display: block; margin: 14px 0 6px; }
+.combat-card { margin-bottom: 20px; }
+.enemy-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.enemy-card { border: 1px solid #724453; border-radius: 10px; padding: 14px; background: linear-gradient(145deg, #241821, #171720); }
+.enemy-card h3 { margin: 0 0 10px; color: #f2a6a6; font-family: Georgia, serif; }
+.enemy-card p { margin: 7px 0; color: #c9c2d2; font-size: .88rem; white-space: pre-wrap; }
+.enemy-hp { height: 9px; overflow: hidden; border-radius: 999px; background: #4b3740; }
+.enemy-hp > span { display: block; height: 100%; background: linear-gradient(90deg, #c75a63, #ee9990); }
 .scene-image { width: 100%; max-height: 480px; margin-bottom: 14px; overflow: hidden; border-radius: 10px; background: #171720; text-align: center; }
 .scene-image img { display: block; width: 100%; max-height: 480px; object-fit: contain; }
 .scene-image[hidden], .portrait[hidden] { display: none; }

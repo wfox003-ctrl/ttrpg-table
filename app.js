@@ -7,7 +7,7 @@ const diceInput = document.querySelector('#dice-command');
 const diceResult = document.querySelector('#dice-result');
 
 let entries = [];
-let roomState = { sceneText: '', sceneImageId: '', players: Array.from({ length: 4 }, () => ({ name: '', portraitImageId: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '', personality: '' })) };
+let roomState = { sceneText: '', sceneImageId: '', combat: { active: false, round: 1, enemies: [] }, players: Array.from({ length: 4 }, () => ({ name: '', portraitImageId: '', hp: 10, maxHp: 10, mp: 0, sp: 0, equipment: '', items: '', condition: '', personality: '' })) };
 const imageUrls = new Map();
 let isLoading = false;
 let isSavingState = false;
@@ -60,6 +60,7 @@ function render() {
 function renderState() {
   document.querySelector('#scene-text').value = roomState.sceneText || '';
   showImage(document.querySelector('#scene-image'), roomState.sceneImageId);
+  renderCombat(roomState.combat);
   const container = document.querySelector('#players');
   container.replaceChildren();
   roomState.players.forEach((player, index) => {
@@ -82,6 +83,27 @@ function renderState() {
   renderPlayerSelector();
 }
 
+function renderCombat(combat) {
+  const board = document.querySelector('#combat-board');
+  const safeCombat = combat || { active: false, round: 1, enemies: [] };
+  const enemies = Array.isArray(safeCombat.enemies) ? safeCombat.enemies : [];
+  board.hidden = !safeCombat.active;
+  if (!safeCombat.active) return;
+  document.querySelector('#combat-round').textContent = `第${Math.max(1, Number(safeCombat.round) || 1)}ラウンド`;
+  const list = document.querySelector('#enemy-list');
+  list.replaceChildren();
+  enemies.forEach((enemy) => {
+    const card = document.createElement('article'); card.className = 'enemy-card';
+    const name = document.createElement('h3'); name.textContent = enemy.name || '未設定の敵'; card.append(name);
+    const hp = Math.max(0, Number(enemy.hp) || 0); const maxHp = Math.max(1, Number(enemy.maxHp) || 1);
+    const hpText = document.createElement('p'); hpText.textContent = `HP ${hp} / ${maxHp}`; card.append(hpText);
+    const bar = document.createElement('div'); bar.className = 'enemy-hp'; const fill = document.createElement('span'); fill.style.width = `${Math.min(100, hp / maxHp * 100)}%`; bar.append(fill); card.append(bar);
+    const condition = document.createElement('p'); condition.textContent = `状態：${enemy.condition || '正常'}`; card.append(condition);
+    if (enemy.note) { const note = document.createElement('p'); note.textContent = `特徴：${enemy.note}`; card.append(note); }
+    list.append(card);
+  });
+}
+
 function renderPlayerSelector() {
   const selected = nameInput.value;
   nameInput.replaceChildren();
@@ -97,7 +119,7 @@ function renderPlayerSelector() {
 function readStateFromScreen() {
   return {
     sceneText: document.querySelector('#scene-text').value.trim(),
-    sceneImageId: roomState.sceneImageId || '',
+    sceneImageId: roomState.sceneImageId || '', combat: roomState.combat || { active: false, round: 1, enemies: [] },
     players: [...document.querySelectorAll('.player-card')].map((card) => ({
       name: card.querySelector('.character-name').value.trim(), portraitImageId: roomState.players[Number(card.dataset.index)]?.portraitImageId || '', hp: Number(card.querySelector('.hp').value) || 0,
       maxHp: Number(card.querySelector('.max-hp').value) || 1, mp: Number(card.querySelector('.mp').value) || 0,
